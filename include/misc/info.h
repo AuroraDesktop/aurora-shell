@@ -1,0 +1,3 @@
+#ifndef AURORA_SHELL_VERSION
+#define AURORA_SHELL_VERSION "1.0"
+#endif
