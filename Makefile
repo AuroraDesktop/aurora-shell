@@ -1,7 +1,7 @@
 # Compiler
-CC      := clang
-LIBS	:= `pkg-config --libs gtk+-3.0`
-CFLAGS  := -Wno-deprecated -pedantic `pkg-config --cflags gtk+-3.0`
+CC      := gcc
+LIBS	:= `pkg-config --libs gtk+-3.0` `pkg-config --libs glib-2.0`
+CFLAGS  := -Wno-deprecated -Wno-deprecated-declarations -pedantic `pkg-config --cflags gtk+-3.0`
 
 # Directories
 SRCDIR  := src
@@ -39,15 +39,27 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR) $(INCDIR)
 	@echo CC $<
 	@$(CC) $(CFLAGS) $(INC) -c $< -o $@
 
+# GResource binary
+resources.c: resources.xml
+	@echo GEN $<
+	@glib-compile-resources $< --target=$@ --generate-source
+
 # Target
-$(TARGET): $(BINDIR) $(OBJ)
+$(TARGET): $(BINDIR) resources.c $(OBJ)
 	@echo LINK $<
-	@$(CC) $(CFLAGS) $(OBJ) -o $@ $(LIBS)
+	@$(CC) $(CFLAGS) $(OBJ) resources.c -o $@ $(LIBS)
 
 # Clean
 clean:
 	@echo "Cleaning up root"
-	@rm -rf $(OBJDIR) $(BINDIR)
+	@rm -rf $(OBJDIR) $(BINDIR) resources.c resources.h
+
+# Format
+format:
+	@echo "Formatting files using clang-format"
+	@clang-format --style="{BasedOnStyle: llvm, IndentWidth: 4}" -i `find . -name "*.h"`
+	@clang-format --style="{BasedOnStyle: llvm, IndentWidth: 4}" -i `find . -name "*.c"`
+	@echo "Done!"
 
 # Install
 install: $(TARGET)
